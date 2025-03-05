@@ -1,0 +1,133 @@
+import { FinanceEntry } from '../types';
+import { useState } from 'react';
+
+interface Props {
+  entries: FinanceEntry[];
+  onEdit: (entry: FinanceEntry) => void;
+  onDelete: (id: number) => void;
+}
+
+export default function FinanceEntriesTable({ entries, onEdit, onDelete }: Props) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
+
+  const handleDeleteClick = (id: number) => {
+    setEntryToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (entryToDelete !== null) {
+      onDelete(entryToDelete);
+      setShowDeleteConfirm(false);
+      setEntryToDelete(null);
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  };
+
+  return (
+    <div className="rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full animate-fade-in">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#DC3545]/10 mb-6">
+                <svg className="h-8 w-8 text-[#DC3545]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-[#343A40] mb-2">Delete Entry</h3>
+              <p className="text-[#6C757D] mb-8">
+                Are you sure you want to delete this entry? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-5 py-2.5 bg-white border border-[#6C757D] text-[#6C757D] rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-5 py-2.5 bg-[#DC3545] text-white rounded-lg hover:bg-[#DC3545]/90 transition-colors font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <table className="w-full table-fixed divide-y divide-gray-200">
+        <thead className="bg-[#007BFF]/5">
+          <tr>
+            <th className="w-[10%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Event</th>
+            <th className="w-[12%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Type</th>
+            <th className="w-[15%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Amount</th>
+            <th className="w-[25%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Description</th>
+            <th className="w-[15%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Category</th>
+            <th className="w-[10%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Date</th>
+            <th className="w-[13%] px-4 py-3 text-center text-xs font-medium text-[#343A40] uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {entries.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="px-4 py-8 text-center text-[#6C757D]">
+                No entries found
+              </td>
+            </tr>
+          ) : (
+            entries.map((entry) => (
+              <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-4 text-sm text-[#343A40] text-center truncate">{entry.event_id}</td>
+                <td className="px-4 py-4 text-center">
+                  <span className={`px-2 py-1 rounded-full text-sm ${entry.type === 'INCOME' ? 'bg-[#28A745]/10 text-[#28A745]' : 'bg-[#DC3545]/10 text-[#DC3545]'}`}>
+                    {entry.type}
+                  </span>
+                </td>
+                <td className="px-4 py-4 text-sm font-medium text-center text-black">{formatCurrency(Number(entry.amount))}</td>
+                <td className="px-4 py-4 text-sm text-[#343A40] text-center truncate">{entry.description}</td>
+                <td className="px-4 py-4 text-sm text-[#343A40] text-center truncate">{entry.category}</td>
+                <td className="px-4 py-4 text-sm text-[#343A40] text-center">
+                  {new Date(entry.date).toLocaleDateString()}
+                </td>
+                <td className="px-4 py-4 text-sm font-medium">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      onClick={() => onEdit(entry)}
+                      className="inline-flex items-center px-2 py-1.5 bg-[#007BFF] text-white rounded-md hover:bg-[#007BFF]/90 transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(entry.id)}
+                      className="inline-flex items-center px-2 py-1.5 bg-white border border-[#DC3545] text-[#DC3545] rounded-md hover:bg-[#DC3545] hover:text-white transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
