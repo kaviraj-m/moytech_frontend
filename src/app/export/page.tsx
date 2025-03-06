@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import MoiEntriesExport from '../components/MoiEntriesExport';
 import MaterialEntriesExport from '../components/MaterialEntriesExport';
 import FinanceExport from '../components/FinanceExport';
+import EventDataVisualizer from '../components/EventDataVisualizer';
 
 interface Event {
   id: number;
@@ -45,7 +46,7 @@ export default function ExportPage() {
       <div className="flex justify-center items-center min-h-screen bg-white">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#007BFF] mb-4"></div>
-          <p className="text-[#6C757D] font-medium">Loading data...</p>
+          <p className="text-black font-medium">Loading data...</p>
         </div>
       </div>
     );
@@ -64,15 +65,15 @@ export default function ExportPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#343A40]">Export Data</h1>
-                <p className="text-sm sm:text-base text-[#6C757D] mt-1">Generate reports and export data</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">Export Data</h1>
+                <p className="text-sm sm:text-base text-black mt-1">Generate reports and export data</p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Select Event</h2>
+              <h2 className="text-xl font-semibold mb-4 text-black">Select Event</h2>
               <select
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 value={selectedEventId || ''}
                 onChange={(e) => setSelectedEventId(e.target.value ? Number(e.target.value) : null)}
               >
@@ -86,31 +87,38 @@ export default function ExportPage() {
             </div>
 
             {selectedEventId && (
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-semibold mb-4">Moi Entries Export</h2>
-                  <MoiEntriesExport eventId={selectedEventId} />
-                </div>
+              <>
+                <div className="grid grid-cols-1 gap-6 mb-6">
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-semibold mb-4 text-black">Moi Entries Export</h2>
+                    <MoiEntriesExport eventId={selectedEventId} />
+                  </div>
 
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-semibold mb-4">Material Entries Export</h2>
-                  <MaterialEntriesExport eventId={selectedEventId} />
-                </div>
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-semibold mb-4 text-black">Material Entries Export</h2>
+                    <MaterialEntriesExport eventId={selectedEventId} />
+                  </div>
 
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-xl font-semibold mb-4">Finance Export</h2>
-                  <FinanceExport eventId={selectedEventId} />
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-semibold mb-4 text-black">Finance Export</h2>
+                    <FinanceExport eventId={selectedEventId} />
+                  </div>
                 </div>
-              </div>
+                
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                  <h2 className="text-xl font-semibold mb-4 text-black">Data Visualization</h2>
+                  <EventDataVisualizer eventId={selectedEventId} />
+                </div>
+              </>
             )}
 
             {error && (
-              <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+              <div className="mt-4 p-4 bg-red-100 border-l-4 border-red-500 text-black">
                 <p>{error}</p>
               </div>
             )}
 
-            <footer className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-gray-200 text-center text-[#6C757D] text-xs sm:text-sm">
+            <footer className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-gray-200 text-center text-black text-xs sm:text-sm">
               <p>© {new Date().getFullYear()} MoyTech. All rights reserved.</p>
             </footer>
           </div>

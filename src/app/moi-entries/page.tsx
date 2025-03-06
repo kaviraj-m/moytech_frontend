@@ -157,7 +157,7 @@ export default function MoiEntries() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-16">
-          <div className="min-h-screen bg-gradient-to-br from-[#E8F4FF] to-[#F8FBFF] py-4 sm:py-6 md:py-8">
+          <div className="min-h-screen bg-gradient-to-br from-[#FAE9D5] to-[#E5D1B8] py-4 sm:py-6 md:py-8">
             <div className="container mx-auto px-3 sm:px-4 max-w-7xl pr-4">
               <div className="flex flex-wrap items-center justify-start gap-4 mb-6 sm:mb-8 md:mb-10">
                 <div className="bg-[#0066CC]/10 p-2 sm:p-3 rounded-lg flex-shrink-0">

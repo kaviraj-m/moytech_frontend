@@ -51,7 +51,7 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           });
           return row;
         });
-        const totalIncome = incomeData.reduce((sum, item) => sum + parseFloat(item['Amount']), 0);
+        const totalIncome = incomeData.reduce((sum: number, item: { Amount: string }) => sum + parseFloat(item['Amount']), 0);
         incomeData.push({ Date: 'Total', Category: '', Description: '', Amount: formatAmount(totalIncome) });
         const incomeWs = XLSX.utils.json_to_sheet(incomeData);
         XLSX.utils.book_append_sheet(wb, incomeWs, 'Income');
@@ -64,7 +64,7 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           });
           return row;
         });
-        const totalExpense = expenseData.reduce((sum, item) => sum + parseFloat(item['Amount']), 0);
+        const totalExpense = expenseData.reduce((sum: number, item: { Amount: string }) => sum + parseFloat(item['Amount']), 0);
         expenseData.push({ Date: 'Total', Category: '', Description: '', Amount: formatAmount(totalExpense) });
         const expenseWs = XLSX.utils.json_to_sheet(expenseData);
         XLSX.utils.book_append_sheet(wb, expenseWs, 'Expenses');
@@ -79,7 +79,7 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           });
           return row;
         });
-        const total = tableData.reduce((sum, item) => {
+        const total = tableData.reduce((sum: number, item: Record<string, any>) => {
           const amount = item['Amount'] ? parseFloat(item['Amount']) : 0;
           return sum + amount;
         }, 0);
@@ -145,16 +145,17 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           theme: 'grid',
           styles: { fontSize: 8 },
           headStyles: { fillColor: [220, 53, 69] },
-          startY: doc.lastAutoTable.finalY + 20,
+          startY: (doc as any).lastAutoTable.finalY + 20,
           didDrawPage: () => {
             doc.setFontSize(16);
-            doc.text('Expenses', 14, doc.lastAutoTable.finalY + 15);
+            doc.text('Expenses', 14, (doc as any).lastAutoTable.finalY + 15);
           }
         });
 
         // Add summary if available
         if (exportData.summary) {
-          const summaryY = doc.lastAutoTable.finalY + 20;
+          // Cast doc to any to access lastAutoTable property
+          const summaryY = (doc as any).lastAutoTable.finalY + 20;
           doc.setFontSize(12);
           doc.text(`Total Income: ${formatAmount(exportData.summary.total_income)}`, 14, summaryY);
           doc.text(`Total Expenses: ${formatAmount(exportData.summary.total_expense)}`, 14, summaryY + 7);
@@ -188,7 +189,7 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
         });
 
         // Add total amount after the table
-        const finalY = doc.lastAutoTable.finalY + 10;
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
         doc.setFontSize(10);
         doc.text(`Total Amount: ${formatAmount(total)}`, 14, finalY);
       }

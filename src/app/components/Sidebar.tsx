@@ -10,31 +10,42 @@ export default function Sidebar() {
 
   const menuItems = [
     { 
-      icon: '/globe.svg', 
+      icon: '/dashboard.svg', 
       label: 'Dashboard', 
       href: '/dashboard',
       description: 'View overall statistics and summaries'
     },
     { 
-      icon: '/file.svg', 
+      icon: '/moi-entries.svg', 
       label: 'Moi Entries', 
       href: '/moi-entries',
       description: 'Manage monetary contributions'
     },
     { 
-      icon: '/window.svg', 
+      icon: '/material-entries.svg', 
       label: 'Material Entries', 
       href: '/material-entries',
       description: 'Track material donations'
     },
     { 
-      icon: '/globe.svg', 
+      icon: '/finance.svg', 
       label: 'Finance', 
       href: '/finance',
       description: 'Monitor financial transactions'
+    },
+    { 
+      icon: '/calendar.svg', 
+      label: 'Events', 
+      href: '/events',
+      description: 'Manage and track events'
+    },
+    { 
+      icon: '/download.svg', 
+      label: 'Export', 
+      href: '/export',
+      description: 'Export data and reports'
     }
   ];
-
   return (
     <div
       className={`fixed left-0 top-0 h-full bg-gradient-to-br from-[#FAE9D5] to-[#E5D1B8] shadow-lg transition-all duration-300 ease-in-out flex flex-col justify-between ${isCollapsed && !isHovered ? 'w-16 bg-black/10' : 'w-64'}`}

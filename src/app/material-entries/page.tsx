@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import MaterialEntryForm from './components/MaterialEntryForm';
+import MoiEntryForm from './components/MoiEntryForm';
 import EventFilter from './components/EventFilter';
-import MaterialEntriesTable from './components/MaterialEntriesTable';
-import { MaterialEntry, Event } from './types';
+import MoiEntriesTable from './components/MoiEntriesTable';
+import { MoiEntry, Event } from './types';
+import Sidebar from '../components/Sidebar';
 
 // Create a client-only wrapper component
 const ClientOnly = ({ children }: { children: React.ReactNode }) => {
@@ -26,34 +27,35 @@ const ClientOnly = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-export default function MaterialEntries() {
-  const [materialEntries, setMaterialEntries] = useState<MaterialEntry[]>([]);
+export default function MoiEntries() {
+  const [moiEntries, setMoiEntries] = useState<MoiEntry[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | ''>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editingEntry, setEditingEntry] = useState<MaterialEntry | null>(null);
+  const [editingEntry, setEditingEntry] = useState<MoiEntry | null>(null);
   const [formData, setFormData] = useState({
     contributor_name: '',
-    material_type: '',
-    weight: '',
-    description: '',
+    amount: '',
+    notes: '',
     place: '',
     event_id: ''
   });
-
   const handleSubmit = async (formData: any) => {
     try {
       const url = editingEntry 
-        ? `http://localhost:3000/api/materialentries/${editingEntry.id}`
-        : 'http://localhost:3000/api/materialentries';
+        ? `http://localhost:3000/api/moyentries/${editingEntry.id}`
+        : 'http://localhost:3000/api/moyentries';
       
       const response = await fetch(url, {
         method: editingEntry ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          date: new Date().toISOString() // Add current date/time
+        }),
       });
 
       if (!response.ok) {
@@ -62,22 +64,23 @@ export default function MaterialEntries() {
 
       // Refresh the entries list
       const fetchUrl = selectedEventId 
-        ? `http://localhost:3000/api/materialentries/event/${selectedEventId}`
-        : 'http://localhost:3000/api/materialentries';
+        ? `http://localhost:3000/api/moyentries/event/${selectedEventId}`
+        : 'http://localhost:3000/api/moyentries';
         
       const updatedResponse = await fetch(fetchUrl);
       const updatedData = await updatedResponse.json();
-      setMaterialEntries(updatedData);
+      setMoiEntries(updatedData);
       setEditingEntry(null);
     } catch (err) {
       setError('Error submitting entry');
       console.error('Error submitting entry:', err);
     }
   };
-
   const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this entry?')) return;
+    
     try {
-      const response = await fetch(`http://localhost:3000/api/materialentries/${id}`, {
+      const response = await fetch(`http://localhost:3000/api/moyentries/${id}`, {
         method: 'DELETE',
       });
       
@@ -87,18 +90,17 @@ export default function MaterialEntries() {
 
       // Refresh the entries list after deletion
       const fetchUrl = selectedEventId 
-        ? `http://localhost:3000/api/materialentries/event/${selectedEventId}`
-        : 'http://localhost:3000/api/materialentries';
+        ? `http://localhost:3000/api/moyentries/event/${selectedEventId}`
+        : 'http://localhost:3000/api/moyentries';
         
       const updatedResponse = await fetch(fetchUrl);
       const updatedData = await updatedResponse.json();
-      setMaterialEntries(updatedData);
+      setMoiEntries(updatedData);
     } catch (err) {
       setError('Error deleting entry');
       console.error('Error deleting entry:', err);
     }
   };
-
   // Update the main useEffect
   useEffect(() => {
     const fetchEvents = async () => {
@@ -116,30 +118,29 @@ export default function MaterialEntries() {
     };
     fetchEvents();
     
-    const fetchMaterialEntries = async (eventId: number | '') => {
+    const fetchMoiEntries = async (eventId: number | '') => {
       try {
         const url = eventId 
-          ? `http://localhost:3000/api/materialentries/event/${eventId}`
-          : 'http://localhost:3000/api/materialentries';
+          ? `http://localhost:3000/api/moyentries/event/${eventId}`
+          : 'http://localhost:3000/api/moyentries';
         
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Failed to fetch material entries');
+          throw new Error('Failed to fetch moi entries');
         }
         const data = await response.json();
-        setMaterialEntries(data);
+        setMoiEntries(data);
         setLoading(false);
       } catch (err) {
-        setError('Error fetching material entries');
-        console.error('Error fetching material entries:', err);
+        setError('Error fetching moi entries');
+        console.error('Error fetching moi entries:', err);
         setLoading(false);
       }
     };
 
-    fetchMaterialEntries(selectedEventId);
+    fetchMoiEntries(selectedEventId);
   }, [selectedEventId]);
-
-  // Loading state
+  // Loading state remains the same
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -153,78 +154,69 @@ export default function MaterialEntries() {
   
   return (
     <ClientOnly>
-      <div className="min-h-screen bg-[#F8F9FA] py-4 sm:py-6 md:py-8">
-        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
-          {/* Responsive header with flex-wrap for small screens */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-8 md:mb-10">
-            <div className="flex items-center gap-4">
-              <div className="bg-[#007BFF]/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
-                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-[#007BFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#343A40]">Material Entries</h1>
-                <p className="text-sm sm:text-base text-[#6C757D] mt-1">Manage and track all material contributions</p>
-              </div>
-            </div>
-            <div className="px-5 py-3 bg-[#007BFF]/20 rounded-lg shadow-sm border border-[#007BFF]/30">
-              <p className="text-base sm:text-lg text-[#343A40] font-extrabold flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Contact: <span className="text-[#007BFF]">7339193757</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Mobile-first layout with reversed order on small screens */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
-            {/* Form section - appears first on mobile, right side on desktop */}
-            <div className="xl:col-span-4 xl:order-2 mb-6 xl:mb-0">
-              <div className="xl:sticky xl:top-4 xl:max-h-screen xl:overflow-visible">
-                <div className="bg-gradient-to-br from-[#007BFF]/5 to-[#007BFF]/10 p-1 rounded-xl">
-                  <MaterialEntryForm 
-                    events={events}
-                    onSubmit={handleSubmit}
-                    editingEntry={editingEntry}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Table section - appears second on mobile, left side on desktop */}
-            <div className="xl:col-span-8 xl:order-1">
-              <EventFilter
-                events={events}
-                selectedEventId={selectedEventId}
-                onEventChange={setSelectedEventId}
-              />
-
-              <div className="w-full overflow-hidden shadow-md rounded-lg">
-                <MaterialEntriesTable
-                  entries={materialEntries}
-                  onEdit={(entry) => setEditingEntry(entry)}
-                  onDelete={handleDelete}
-                />
-              </div>
-
-              {/* Responsive error message */}
-              {error && (
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-[#DC3545]/10 border-l-4 border-[#DC3545] rounded-md flex items-center">
-                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-[#DC3545] mr-2 sm:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 ml-16">
+          <div className="min-h-screen bg-gradient-to-br from-[#E8F4FF] to-[#F8FBFF] py-4 sm:py-6 md:py-8">
+            <div className="container mx-auto px-3 sm:px-4 max-w-7xl pr-4">
+              <div className="flex flex-wrap items-center justify-start gap-4 mb-6 sm:mb-8 md:mb-10">
+                <div className="bg-[#0066CC]/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-[#0066CC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
-                  <p className="text-sm sm:text-base text-[#DC3545] font-medium">{error}</p>
                 </div>
-              )}
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">Moi Entries</h1>
+                  <p className="text-sm sm:text-base text-[#4D4D4D] mt-1">Manage and track all contributions</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 md:gap-8">
+                <div className="xl:col-span-4 xl:order-2 mb-6 xl:mb-0">
+                  <div className="xl:sticky xl:top-4 xl:max-h-screen xl:overflow-visible">
+                    <div className="bg-gradient-to-br from-white to-[#F0F7FF] p-1 rounded-xl shadow-lg">
+                      <MoiEntryForm 
+                        events={events}
+                        onSubmit={handleSubmit}
+                        editingEntry={editingEntry}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="xl:col-span-8 xl:order-1">
+                  <EventFilter
+                    events={events}
+                    selectedEventId={selectedEventId}
+                    onEventChange={setSelectedEventId}
+                  />
+
+                  <div className="w-full overflow-hidden shadow-md rounded-lg">
+                    <MoiEntriesTable
+                      entries={moiEntries}
+                      onEdit={(entry) => setEditingEntry(entry)}
+                      onDelete={handleDelete}
+                    />
+                  </div>
+
+                  {/* Responsive error message */}
+                  {error && (
+                    <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-[#FF3B30]/10 border-l-4 border-[#FF3B30] rounded-md flex items-center">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 text-[#FF3B30] mr-2 sm:mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-sm sm:text-base text-[#FF3B30] font-medium">{error}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Responsive footer */}
+              <footer className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-gray-200 text-center text-[#4D4D4D] text-xs sm:text-sm">
+                <p>© {new Date().getFullYear()} MoyTech. All rights reserved.</p>
+              </footer>
             </div>
           </div>
-
-          {/* Responsive footer */}
-          <footer className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-gray-200 text-center text-[#6C757D] text-xs sm:text-sm">
-            <p>© {new Date().getFullYear()} MoyTech. All rights reserved.</p>
-          </footer>
         </div>
       </div>
     </ClientOnly>
