@@ -103,14 +103,45 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
       const exportData = onExport ? await onExport('pdf') : data;
       const doc = new jsPDF();
 
-      // Add event details if available
+      // Add enhanced event details if available
       if (eventDetails) {
-        doc.setFontSize(14);
-        doc.text(`Event: ${eventDetails.name}`, 14, 15);
+        // Create a colored header box for event details
+        doc.setFillColor(0, 102, 204, 0.1); // Light blue background
+        doc.rect(10, 10, 190, 40, 'F');
+        
+        // Add a border to the header
+        doc.setDrawColor(0, 102, 204);
+        doc.setLineWidth(0.5);
+        doc.rect(10, 10, 190, 40, 'S');
+        
+        // Add event title with larger, bold font
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(0, 102, 204); // Blue text for title
+        doc.text(`Event: ${eventDetails.name}`, 14, 20);
+        
+        // Add event details with normal font
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text(`Date: ${new Date(eventDetails.date).toLocaleDateString()}`, 14, 22);
-        doc.text(`Location: ${eventDetails.location}`, 14, 28);
-        doc.text(`Type: ${eventDetails.event_type}`, 14, 34);
+        doc.setTextColor(68, 68, 68); // Dark gray text for details
+        
+        // Format date nicely
+        const eventDate = new Date(eventDetails.date);
+        const formattedDate = eventDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        // Add more comprehensive event information
+        doc.text(`Date: ${formattedDate}`, 14, 28);
+        doc.text(`Time: ${eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`, 14, 34);
+        doc.text(`Location: ${eventDetails.location}`, 14, 40);
+        doc.text(`Event Type: ${eventDetails.event_type}`, 120, 28);
+        
+        // Reset text color for the rest of the document
+        doc.setTextColor(0, 0, 0);
       }
 
       if ('income' in columns) {
@@ -167,17 +198,22 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           columns.map(col => item[col.accessor])
         );
 
-        // Calculate total amount
-        const total = exportData.reduce((sum: number, item: any) => {
-          const amountCol = columns.find(col => col.accessor === 'amount');
-          if (amountCol) {
-            const amount = typeof item[amountCol.accessor] === 'string' 
-              ? parseFloat(item[amountCol.accessor].replace(/[^0-9.-]+/g, '')) 
-              : item[amountCol.accessor];
-            return sum + (isNaN(amount) ? 0 : amount);
-          }
-          return sum;
-        }, 0);
+        // Check if this is a material entry export
+        const isMaterialEntry = fileName.toLowerCase().includes('material');
+
+        // Calculate total amount (skip for material entries)
+        if (!isMaterialEntry) {
+          const total = exportData.reduce((sum: number, item: any) => {
+            const amountCol = columns.find(col => col.accessor === 'amount');
+            if (amountCol) {
+              const amount = typeof item[amountCol.accessor] === 'string' 
+                ? parseFloat(item[amountCol.accessor].replace(/[^0-9.-]+/g, '')) 
+                : item[amountCol.accessor];
+              return sum + (isNaN(amount) ? 0 : amount);
+            }
+            return sum;
+          }, 0);
+        }
 
         autoTable(doc, {
           head: [columns.map(col => col.header)],
@@ -188,10 +224,23 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
           startY: eventDetails ? 45 : 20
         });
 
-        // Add total amount after the table
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
-        doc.setFontSize(10);
-        doc.text(`Total Amount: ${formatAmount(total)}`, 14, finalY);
+        // Add total amount after the table (skip for material entries)
+        if (!isMaterialEntry) {
+          const total = exportData.reduce((sum: number, item: any) => {
+            const amountCol = columns.find(col => col.accessor === 'amount');
+            if (amountCol) {
+              const amount = typeof item[amountCol.accessor] === 'string' 
+                ? parseFloat(item[amountCol.accessor].replace(/[^0-9.-]+/g, '')) 
+                : item[amountCol.accessor];
+              return sum + (isNaN(amount) ? 0 : amount);
+            }
+            return sum;
+          }, 0);
+          
+          const finalY = (doc as any).lastAutoTable.finalY + 10;
+          doc.setFontSize(10);
+          doc.text(`Total Amount: ${formatAmount(total)}`, 14, finalY);
+        }
       }
 
       doc.save(`${fileName}.pdf`);

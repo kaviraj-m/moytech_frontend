@@ -6,25 +6,10 @@ import FinanceEntryForm from './components/FinanceEntryForm';
 import EventFilter from './components/EventFilter';
 import FinanceEntriesTable from './components/FinanceEntriesTable';
 import { FinanceEntry, Event } from './types';
+import Sidebar from '../components/Sidebar';
+import ClientOnly from '../components/ClientOnly';
 
-// Create a client-only wrapper component
-const ClientOnly = ({ children }: { children: React.ReactNode }) => {
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
 
 export default function Finance() {
   const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
@@ -164,8 +149,11 @@ export default function Finance() {
   
   return (
     <ClientOnly>
-      <div className="min-h-screen bg-[#F8F9FA] py-4 sm:py-6 md:py-8">
-        <div className="container mx-auto px-3 sm:px-4 max-w-7xl">
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 ml-16">
+          <div className="min-h-screen bg-gradient-to-br from-[#FAE9D5] to-[#E5D1B8] py-4 sm:py-6 md:py-8">
+            <div className="container mx-auto px-3 sm:px-4 max-w-7xl pr-4">
           {/* Responsive header with flex-wrap for small screens */}
           <div className="flex flex-wrap items-center justify-start gap-4 mb-6 sm:mb-8 md:mb-10">
             <div className="flex items-center gap-4">
@@ -240,6 +228,8 @@ export default function Finance() {
           <footer className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-gray-200 text-center text-[#6C757D] text-xs sm:text-sm">
             <p>© {new Date().getFullYear()} MoyTech. All rights reserved.</p>
           </footer>
+            </div>
+          </div>
         </div>
       </div>
     </ClientOnly>

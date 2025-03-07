@@ -2,50 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import MoiEntryForm from './components/MoiEntryForm';
+import MaterialEntryForm from './components/MaterialEntryForm';
 import EventFilter from './components/EventFilter';
-import MoiEntriesTable from './components/MoiEntriesTable';
-import { MoiEntry, Event } from './types';
+import MaterialEntriesTable from './components/MaterialEntriesTable';
+import { MaterialEntry, Event } from './types';
 import Sidebar from '../components/Sidebar';
+import ClientOnly from '../components/ClientOnly';
 
-// Create a client-only wrapper component
-const ClientOnly = ({ children }: { children: React.ReactNode }) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
-
-export default function MoiEntries() {
-  const [moiEntries, setMoiEntries] = useState<MoiEntry[]>([]);
+export default function MaterialEntries() {
+  const [materialEntries, setMaterialEntries] = useState<MaterialEntry[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | ''>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editingEntry, setEditingEntry] = useState<MoiEntry | null>(null);
-  const [formData, setFormData] = useState({
-    contributor_name: '',
-    amount: '',
-    notes: '',
-    place: '',
-    event_id: ''
-  });
+  const [editingEntry, setEditingEntry] = useState<MaterialEntry | null>(null);
   const handleSubmit = async (formData: any) => {
     try {
       const url = editingEntry 
-        ? `http://localhost:3000/api/moyentries/${editingEntry.id}`
-        : 'http://localhost:3000/api/moyentries';
+        ? `http://localhost:3000/api/materialentries/${editingEntry.id}`
+        : 'http://localhost:3000/api/materialentries';
       
       const response = await fetch(url, {
         method: editingEntry ? 'PUT' : 'POST',
@@ -64,12 +39,12 @@ export default function MoiEntries() {
 
       // Refresh the entries list
       const fetchUrl = selectedEventId 
-        ? `http://localhost:3000/api/moyentries/event/${selectedEventId}`
-        : 'http://localhost:3000/api/moyentries';
+        ? `http://localhost:3000/api/materialentries/event/${selectedEventId}`
+        : 'http://localhost:3000/api/materialentries';
         
       const updatedResponse = await fetch(fetchUrl);
       const updatedData = await updatedResponse.json();
-      setMoiEntries(updatedData);
+      setMaterialEntries(updatedData);
       setEditingEntry(null);
     } catch (err) {
       setError('Error submitting entry');
@@ -80,7 +55,7 @@ export default function MoiEntries() {
     if (!window.confirm('Are you sure you want to delete this entry?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3000/api/moyentries/${id}`, {
+      const response = await fetch(`http://localhost:3000/api/materialentries/${id}`, {
         method: 'DELETE',
       });
       
@@ -90,12 +65,12 @@ export default function MoiEntries() {
 
       // Refresh the entries list after deletion
       const fetchUrl = selectedEventId 
-        ? `http://localhost:3000/api/moyentries/event/${selectedEventId}`
-        : 'http://localhost:3000/api/moyentries';
+        ? `http://localhost:3000/api/materialentries/event/${selectedEventId}`
+        : 'http://localhost:3000/api/materialentries';
         
       const updatedResponse = await fetch(fetchUrl);
       const updatedData = await updatedResponse.json();
-      setMoiEntries(updatedData);
+      setMaterialEntries(updatedData);
     } catch (err) {
       setError('Error deleting entry');
       console.error('Error deleting entry:', err);
@@ -118,27 +93,27 @@ export default function MoiEntries() {
     };
     fetchEvents();
     
-    const fetchMoiEntries = async (eventId: number | '') => {
+    const fetchMaterialEntries = async (eventId: number | '') => {
       try {
         const url = eventId 
-          ? `http://localhost:3000/api/moyentries/event/${eventId}`
-          : 'http://localhost:3000/api/moyentries';
+          ? `http://localhost:3000/api/materialentries/event/${eventId}`
+          : 'http://localhost:3000/api/materialentries';
         
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Failed to fetch moi entries');
+          throw new Error('Failed to fetch material entries');
         }
         const data = await response.json();
-        setMoiEntries(data);
+        setMaterialEntries(data);
         setLoading(false);
       } catch (err) {
-        setError('Error fetching moi entries');
-        console.error('Error fetching moi entries:', err);
+        setError('Error fetching material entries');
+        console.error('Error fetching material entries:', err);
         setLoading(false);
       }
     };
 
-    fetchMoiEntries(selectedEventId);
+    fetchMaterialEntries(selectedEventId);
   }, [selectedEventId]);
   // Loading state remains the same
   if (loading) {
@@ -157,7 +132,7 @@ export default function MoiEntries() {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-16">
-          <div className="min-h-screen bg-gradient-to-br from-[#E8F4FF] to-[#F8FBFF] py-4 sm:py-6 md:py-8">
+          <div className="min-h-screen bg-gradient-to-br from-[#FAE9D5] to-[#E5D1B8] py-4 sm:py-6 md:py-8">
             <div className="container mx-auto px-3 sm:px-4 max-w-7xl pr-4">
               <div className="flex flex-wrap items-center justify-start gap-4 mb-6 sm:mb-8 md:mb-10">
                 <div className="bg-[#0066CC]/10 p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -166,8 +141,8 @@ export default function MoiEntries() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">Moi Entries</h1>
-                  <p className="text-sm sm:text-base text-[#4D4D4D] mt-1">Manage and track all contributions</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1A1A]">Material Entries</h1>
+                  <p className="text-sm sm:text-base text-[#4D4D4D] mt-1">Manage and track all material donations</p>
                 </div>
               </div>
 
@@ -175,7 +150,7 @@ export default function MoiEntries() {
                 <div className="xl:col-span-4 xl:order-2 mb-6 xl:mb-0">
                   <div className="xl:sticky xl:top-4 xl:max-h-screen xl:overflow-visible">
                     <div className="bg-gradient-to-br from-white to-[#F0F7FF] p-1 rounded-xl shadow-lg">
-                      <MoiEntryForm 
+                      <MaterialEntryForm 
                         events={events}
                         onSubmit={handleSubmit}
                         editingEntry={editingEntry}
@@ -192,9 +167,9 @@ export default function MoiEntries() {
                   />
 
                   <div className="w-full overflow-hidden shadow-md rounded-lg">
-                    <MoiEntriesTable
-                      entries={moiEntries}
-                      onEdit={(entry) => setEditingEntry(entry)}
+                    <MaterialEntriesTable
+                      entries={materialEntries}
+                      onEdit={(entry: MaterialEntry) => setEditingEntry(entry)}
                       onDelete={handleDelete}
                     />
                   </div>
