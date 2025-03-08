@@ -45,7 +45,7 @@ export default function MaterialEntriesExport({ eventId }: MaterialEntriesExport
       const data: MaterialEntry[] = await response.json();
       const formattedData = data.map(entry => ({
         ...entry,
-        weight: entry.weight.toFixed(3),
+        weight: typeof entry.weight === 'number' ? entry.weight.toFixed(3) : String(entry.weight),
         created_at: new Date(entry.created_at).toLocaleDateString('en-IN')
       }));
 

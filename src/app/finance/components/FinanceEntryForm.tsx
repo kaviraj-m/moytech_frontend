@@ -63,10 +63,29 @@ export default function FinanceEntryForm({ events, onSubmit, editingEntry }: Pro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate description and category
+    const trimmedDescription = formData.description.trim();
+    const trimmedCategory = formData.category === 'Other' ? customCategory.trim() : formData.category.trim();
+
+    if (!trimmedDescription) {
+      setNotificationMessage('Description cannot be empty');
+      setShowNotification(true);
+      return;
+    }
+
+    if (!trimmedCategory) {
+      setNotificationMessage('Category cannot be empty');
+      setShowNotification(true);
+      return;
+    }
+
     onSubmit({
       ...formData,
       event_id: parseInt(formData.event_id),
-      amount: parseFloat(formData.amount)
+      amount: parseFloat(formData.amount),
+      description: trimmedDescription,
+      category: trimmedCategory
     });
 
     setNotificationMessage(editingEntry ? 'Entry updated successfully!' : 'New entry added successfully!');
@@ -91,15 +110,21 @@ export default function FinanceEntryForm({ events, onSubmit, editingEntry }: Pro
       <div className="bg-white rounded-xl shadow-lg p-8 mb-8 relative border border-gray-100">
         {showNotification && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border-l-4 border-[#28A745] p-5 shadow-2xl rounded-lg max-w-md w-full animate-fade-in">
+            <div className={`bg-white border-l-4 ${notificationMessage.includes('cannot be empty') ? 'border-[#FF3B30]' : 'border-[#28A745]'} p-5 shadow-2xl rounded-lg max-w-md w-full animate-fade-in`}>
               <div className="flex items-center">
-                <div className="flex-shrink-0 bg-[#28A745]/10 p-2 rounded-full">
-                  <svg className="h-6 w-6 text-[#28A745]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <div className={`flex-shrink-0 ${notificationMessage.includes('cannot be empty') ? 'bg-[#FF3B30]/10' : 'bg-[#28A745]/10'} p-2 rounded-full`}>
+                  {notificationMessage.includes('cannot be empty') ? (
+                    <svg className="h-6 w-6 text-[#FF3B30]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="h-6 w-6 text-[#28A745]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className="text-base font-medium text-[#343A40]">
+                  <p className={`text-base font-medium ${notificationMessage.includes('cannot be empty') ? 'text-[#FF3B30]' : 'text-[#343A40]'}`}>
                     {notificationMessage}
                   </p>
                 </div>
