@@ -11,6 +11,7 @@
   "dependencies": {
     "@types/xlsx": "^0.0.35",
     "chart.js": "^4.4.8",
+    "cookies-next": "^5.1.0",
     "jspdf": "^3.0.0",
     "jspdf-autotable": "^5.0.2",
     "next": "15.2.0",

@@ -8,6 +8,7 @@ import FinanceEntriesTable from './components/FinanceEntriesTable';
 import { FinanceEntry, Event } from './types';
 import Sidebar from '../components/Sidebar';
 import ClientOnly from '../components/ClientOnly';
+import AuthCheck from '../components/AuthCheck';
 
 
 
@@ -146,9 +147,9 @@ export default function Finance() {
       </div>
     );
   }
-  
+
   return (
-    <ClientOnly>
+    <AuthCheck>
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-16">
@@ -232,6 +233,6 @@ export default function Finance() {
           </div>
         </div>
       </div>
-    </ClientOnly>
+    </AuthCheck>
   );
 }

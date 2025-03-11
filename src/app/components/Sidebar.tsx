@@ -3,10 +3,37 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function Sidebar() {
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [username, setUsername] = useState('');  
+  
+  useEffect(() => {
+    // Get user data from localStorage
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setUsername(user.username || 'User');
+      }
+    } catch (error) {
+      console.error('Error getting user data:', error);
+    }
+  }, []);  
+  
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('user');
+    
+    // Clear user cookie
+    document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    
+    // Redirect to login page
+    router.push('/login');
+  };
 
   const menuItems = [
     { 
@@ -111,9 +138,9 @@ export default function Sidebar() {
           </div>
           {(!isCollapsed || isHovered) && (
             <div className="flex-1 transition-opacity duration-200">
-              <p className="text-sm font-medium text-gray-700">John Smith</p>
+              <p className="text-sm font-medium text-gray-700">{username}</p>
               <button
-                onClick={() => console.log('Logout clicked')}
+                onClick={handleLogout}
                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center space-x-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

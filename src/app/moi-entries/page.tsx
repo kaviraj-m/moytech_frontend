@@ -7,25 +7,8 @@ import EventFilter from './components/EventFilter';
 import MoiEntriesTable from './components/MoiEntriesTable';
 import { MoiEntry, Event } from './types';
 import Sidebar from '../components/Sidebar';
-
-// Create a client-only wrapper component
-const ClientOnly = ({ children }: { children: React.ReactNode }) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
+import ClientOnly from '../components/ClientOnly';
+import AuthCheck from '../components/AuthCheck';
 
 export default function MoiEntries() {
   const [moiEntries, setMoiEntries] = useState<MoiEntry[]>([]);
@@ -116,31 +99,31 @@ export default function MoiEntries() {
         console.error('Error fetching events:', err);
       }
     };
-    fetchEvents();
-    
-    const fetchMoiEntries = async (eventId: number | '') => {
+
+    const fetchMoiEntries = async () => {
       try {
-        const url = eventId 
-          ? `http://localhost:3000/api/moyentries/event/${eventId}`
+        const fetchUrl = selectedEventId 
+          ? `http://localhost:3000/api/moyentries/event/${selectedEventId}`
           : 'http://localhost:3000/api/moyentries';
-        
-        const response = await fetch(url);
+          
+        const response = await fetch(fetchUrl);
         if (!response.ok) {
           throw new Error('Failed to fetch moi entries');
         }
         const data = await response.json();
         setMoiEntries(data);
-        setLoading(false);
       } catch (err) {
         setError('Error fetching moi entries');
         console.error('Error fetching moi entries:', err);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchMoiEntries(selectedEventId);
+    fetchEvents();
+    fetchMoiEntries();
   }, [selectedEventId]);
-  // Loading state remains the same
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -151,9 +134,9 @@ export default function MoiEntries() {
       </div>
     );
   }
-  
+
   return (
-    <ClientOnly>
+    <AuthCheck>
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-16">
@@ -219,6 +202,6 @@ export default function MoiEntries() {
           </div>
         </div>
       </div>
-    </ClientOnly>
+    </AuthCheck>
   );
 }

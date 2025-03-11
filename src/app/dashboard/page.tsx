@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '../components/Sidebar';
 import ClientOnly from '../components/ClientOnly';
+import AuthCheck from '../components/AuthCheck';
 import MoiDistributionChart from '../components/charts/MoiDistributionChart';
 import MaterialDistributionChart from '../components/charts/MaterialDistributionChart';
 import FinanceChart from '../components/charts/FinanceChart';
@@ -114,7 +115,7 @@ export default function Dashboard() {
   }
 
   return (
-    <ClientOnly>
+    <AuthCheck>
       <div className="flex">
         <Sidebar />
         <div className="flex-1 ml-16">
@@ -228,6 +229,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </ClientOnly>
+    </AuthCheck>
   );
 }
