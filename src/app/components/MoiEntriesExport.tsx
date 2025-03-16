@@ -21,6 +21,7 @@ interface MoiEntry {
 export default function MoiEntriesExport({ eventId }: MoiEntriesExportProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [enableTamilTranslation, setEnableTamilTranslation] = useState(false);
 
   const columns = [
     { header: 'Contributor Name', accessor: 'contributor_name' },
@@ -58,26 +59,42 @@ export default function MoiEntriesExport({ eventId }: MoiEntriesExportProps) {
   };
 
   return (
-    <div className="space-x-2 flex items-center">
-      <ExportButton
-        data={[]}
-        columns={columns}
-        fileName={`moi-entries-event-${eventId}`}
-        variant="excel"
-        onExport={fetchAndExport}
-        loading={loading}
-      />
-      <ExportButton
-        data={[]}
-        columns={columns}
-        fileName={`moi-entries-event-${eventId}`}
-        variant="pdf"
-        onExport={fetchAndExport}
-        loading={loading}
-      />
-      {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
-      )}
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            checked={enableTamilTranslation}
+            onChange={(e) => setEnableTamilTranslation(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span>Enable Tamil Translation for Excel & PDF</span>
+        </label>
+      </div>
+      
+      <div className="space-x-2 flex items-center">
+        <ExportButton
+          data={[]}
+          columns={columns}
+          fileName={`moi-entries-event-${eventId}`}
+          variant="excel"
+          onExport={fetchAndExport}
+          loading={loading}
+          enableTamilTranslation={enableTamilTranslation}
+        />
+        <ExportButton
+          data={[]}
+          columns={columns}
+          fileName={`moi-entries-event-${eventId}`}
+          variant="pdf"
+          onExport={fetchAndExport}
+          loading={loading}
+          enableTamilTranslation={enableTamilTranslation}
+        />
+        {error && (
+          <p className="mt-2 text-sm text-red-600">{error}</p>
+        )}
+      </div>
     </div>
   );
 }

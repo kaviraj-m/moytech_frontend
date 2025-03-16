@@ -23,6 +23,7 @@ interface ExportButtonProps {
   variant?: 'pdf' | 'excel';
   onExport?: (variant: 'pdf' | 'excel') => Promise<any>;
   loading?: boolean;
+  enableTamilTranslation?: boolean;
   eventDetails?: {
     name: string;
     date: string;
@@ -31,24 +32,102 @@ interface ExportButtonProps {
   };
 }
 
-export default function ExportButton({ data, columns, fileName, variant = 'excel', onExport, loading, eventDetails }: ExportButtonProps) {
+export default function ExportButton({ data, columns, fileName, variant = 'excel', onExport, loading, enableTamilTranslation, eventDetails }: ExportButtonProps) {
   const [isLoading, setLoading] = useState(false);
 
   const exportToExcel = async () => {
     try {
       setLoading(true);
       const exportData = onExport ? await onExport('excel') : data;
+      
+      // If Tamil translation is enabled, translate the data
+      let translatedData = exportData;
+      if (enableTamilTranslation) {
+        try {
+          // Import the translation utility dynamically to avoid issues if it's not used
+          const { translateToTamil } = await import('@/utils/translateToTamil');
+          
+          if ('income' in exportData) {
+            // Handle finance report with income and expense sections
+            const translatedIncome = await Promise.all(
+              exportData.income.map(async (entry: any) => {
+                const translatedDescription = await translateToTamil(entry.description);
+                const translatedCategory = await translateToTamil(entry.category);
+                
+                return {
+                  ...entry,
+                  description_tamil: translatedDescription,
+                  category_tamil: translatedCategory
+                };
+              })
+            );
+            
+            const translatedExpense = await Promise.all(
+              exportData.expense.map(async (entry: any) => {
+                const translatedDescription = await translateToTamil(entry.description);
+                const translatedCategory = await translateToTamil(entry.category);
+                
+                return {
+                  ...entry,
+                  description_tamil: translatedDescription,
+                  category_tamil: translatedCategory
+                };
+              })
+            );
+            
+            translatedData = {
+              income: translatedIncome,
+              expense: translatedExpense
+            };
+          } else {
+            // Handle single table export
+            translatedData = await Promise.all(
+              exportData.map(async (entry: any) => {
+                // Translate relevant fields based on file type
+                const translatedEntry = { ...entry };
+                
+                // Check if this is a material entry export
+                const isMaterialEntry = fileName.toLowerCase().includes('material');
+                if (isMaterialEntry) {
+                  translatedEntry.contributor_name_tamil = await translateToTamil(entry.contributor_name);
+                  translatedEntry.material_type_tamil = await translateToTamil(entry.material_type);
+                  translatedEntry.description_tamil = await translateToTamil(entry.description);
+                  translatedEntry.place_tamil = await translateToTamil(entry.place);
+                } else {
+                  // Assume it's a MOY entry or other type
+                  if (entry.contributor_name) translatedEntry.contributor_name_tamil = await translateToTamil(entry.contributor_name);
+                  if (entry.notes) translatedEntry.notes_tamil = await translateToTamil(entry.notes);
+                  if (entry.description) translatedEntry.description_tamil = await translateToTamil(entry.description);
+                  if (entry.place) translatedEntry.place_tamil = await translateToTamil(entry.place);
+                }
+                
+                return translatedEntry;
+              })
+            );
+          }
+        } catch (error) {
+          console.error('Error translating to Tamil:', error);
+          // Continue with untranslated data if translation fails
+        }
+      }
 
       if ('income' in columns) {
         // Handle finance report with multiple sheets
         const wb = XLSX.utils.book_new();
 
         // Income sheet
-        const incomeData = exportData.income.map((item: any) => {
+        const incomeData = translatedData.income.map((item: any) => {
           const row: any = {};
           columns.income.forEach(col => {
             row[col.header] = col.accessor === 'amount' ? formatAmount(item[col.accessor]) : item[col.accessor];
           });
+          
+          // Add Tamil translations if available
+          if (enableTamilTranslation) {
+            if (item.description_tamil) row['Description (Tamil)'] = item.description_tamil;
+            if (item.category_tamil) row['Category (Tamil)'] = item.category_tamil;
+          }
+          
           return row;
         });
         const totalIncome = incomeData.reduce((sum: number, item: { Amount: string }) => sum + parseFloat(item['Amount']), 0);
@@ -57,11 +136,18 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
         XLSX.utils.book_append_sheet(wb, incomeWs, 'Income');
 
         // Expense sheet
-        const expenseData = exportData.expense.map((item: any) => {
+        const expenseData = translatedData.expense.map((item: any) => {
           const row: any = {};
           columns.expense.forEach(col => {
             row[col.header] = col.accessor === 'amount' ? formatAmount(item[col.accessor]) : item[col.accessor];
           });
+          
+          // Add Tamil translations if available
+          if (enableTamilTranslation) {
+            if (item.description_tamil) row['Description (Tamil)'] = item.description_tamil;
+            if (item.category_tamil) row['Category (Tamil)'] = item.category_tamil;
+          }
+          
           return row;
         });
         const totalExpense = expenseData.reduce((sum: number, item: { Amount: string }) => sum + parseFloat(item['Amount']), 0);
@@ -72,11 +158,31 @@ export default function ExportButton({ data, columns, fileName, variant = 'excel
         XLSX.writeFile(wb, `${fileName}.xlsx`);
       } else {
         // Handle single sheet export
-        const tableData = exportData.map((item: any) => {
+        const tableData = translatedData.map((item: any) => {
           const row: any = {};
           columns.forEach(col => {
             row[col.header] = col.accessor === 'amount' ? formatAmount(item[col.accessor]) : item[col.accessor];
           });
+          
+          // Add Tamil translations if available and enabled
+          if (enableTamilTranslation) {
+            // Check if this is a material entry export
+            const isMaterialEntry = fileName.toLowerCase().includes('material');
+            
+            if (isMaterialEntry) {
+              if (item.contributor_name_tamil) row['Contributor Name (Tamil)'] = item.contributor_name_tamil;
+              if (item.material_type_tamil) row['Material Type (Tamil)'] = item.material_type_tamil;
+              if (item.description_tamil) row['Description (Tamil)'] = item.description_tamil;
+              if (item.place_tamil) row['Place (Tamil)'] = item.place_tamil;
+            } else {
+              // Assume it's a MOY entry or other type
+              if (item.contributor_name_tamil) row['Contributor Name (Tamil)'] = item.contributor_name_tamil;
+              if (item.notes_tamil) row['Notes (Tamil)'] = item.notes_tamil;
+              if (item.description_tamil) row['Description (Tamil)'] = item.description_tamil;
+              if (item.place_tamil) row['Place (Tamil)'] = item.place_tamil;
+            }
+          }
+          
           return row;
         });
         const total = tableData.reduce((sum: number, item: Record<string, any>) => {
